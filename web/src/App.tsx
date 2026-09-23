@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ActorSwitcher } from "./shared/ActorSwitcher";
 import { request } from "./shared/api";
 import type { DemoActor, DemoActors } from "./shared/types";
 import { CatalogPage } from "./features/catalog/CatalogPage";
 import { TaskPage } from "./features/proposals/TaskPage";
+import { BusinessWorkspace, TaskEditor } from "./features/business";
 
 const ACTOR_STORAGE_KEY = "ai-sana-demo-actor";
 
@@ -99,9 +100,9 @@ export default function App() {
             <Route path="/" element={<Navigate to="/tasks" replace />} />
             <Route path="/tasks" element={<CatalogPage actorId={actor.id} />} />
             <Route path="/tasks/:taskId" element={<TaskPage actorId={actor.id} role={actor.role} />} />
-            <Route path="/business" element={actor.role === "business" ? <BusinessPlaceholder title="Задачи бизнеса" /> : <Navigate to="/tasks" replace />} />
-            <Route path="/business/tasks/new" element={actor.role === "business" ? <BusinessPlaceholder title="Новая задача" /> : <Navigate to="/tasks" replace />} />
-            <Route path="/business/tasks/:taskId/edit" element={actor.role === "business" ? <BusinessPlaceholder title="Редактирование задачи" /> : <Navigate to="/tasks" replace />} />
+            <Route path="/business" element={actor.role === "business" ? <BusinessWorkspace businessId={actor.id} /> : <Navigate to="/tasks" replace />} />
+            <Route path="/business/tasks/new" element={actor.role === "business" ? <BusinessEditorRoute businessId={actor.id} /> : <Navigate to="/tasks" replace />} />
+            <Route path="/business/tasks/:taskId/edit" element={actor.role === "business" ? <BusinessEditorRoute businessId={actor.id} /> : <Navigate to="/tasks" replace />} />
             <Route path="*" element={<Navigate to="/tasks" replace />} />
           </Routes>
         )}
@@ -110,16 +111,8 @@ export default function App() {
   );
 }
 
-function BusinessPlaceholder({ title }: { title: string }) {
-  return (
-    <section className="empty-state">
-      <p className="eyebrow">Кабинет бизнеса</p>
-      <h1>{title}</h1>
-      <p>Этот раздел скоро будет доступен.</p>
-      {title === "Задачи бизнеса" && (
-        <p><Link className="text-link" to="/business/tasks/new">Создать задачу →</Link></p>
-      )}
-      <Link className="text-link" to="/tasks">Открыть каталог задач →</Link>
-    </section>
-  );
+function BusinessEditorRoute({ businessId }: { businessId: number }) {
+  const { taskId } = useParams();
+  const navigate = useNavigate();
+  return <TaskEditor businessId={businessId} taskId={taskId ? Number(taskId) : undefined} onPublished={(id) => navigate(`/tasks/${id}`)} />;
 }
