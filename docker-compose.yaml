@@ -21,8 +21,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aisana}:${POSTGRES_PASSWORD:-aisana}@db:5432/${POSTGRES_DB:-aisana}
       AI_API_KEY: ${AI_API_KEY:-}
-      AI_API_URL: ${AI_API_URL:-}
-      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      AI_API_URL: ${AI_API_URL:-https://api.openai.com/v1/chat/completions}
+      AI_MODEL: ${AI_MODEL:-gpt-6-luna}
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +33,9 @@ services:
     build: ./web
     environment:
       VITE_API_PROXY_TARGET: http://api:8000
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
     depends_on:
       - api
     ports:
@@ -46,3 +49,4 @@ services:
 
 volumes:
   postgres_data:
+  web_node_modules:
