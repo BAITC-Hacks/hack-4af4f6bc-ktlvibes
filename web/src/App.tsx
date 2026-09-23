@@ -114,5 +114,5 @@ export default function App() {
 function BusinessEditorRoute({ businessId }: { businessId: number }) {
   const { taskId } = useParams();
   const navigate = useNavigate();
-  return <TaskEditor businessId={businessId} taskId={taskId ? Number(taskId) : undefined} onPublished={(id) => navigate(`/tasks/${id}`)} />;
+  return <TaskEditor businessId={businessId} taskId={taskId ? Number(taskId) : undefined} onPublished={(id) => navigate(`/tasks/${id}`)} onSavedExit={() => navigate("/business")} />;
 }

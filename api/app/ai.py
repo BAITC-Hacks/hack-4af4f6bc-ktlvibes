@@ -16,11 +16,11 @@ class Question(BaseModel):
 
 
 class QuestionList(BaseModel):
-    questions: list[Question] = Field(min_length=3, max_length=5)
+    questions: list[Question] = Field(min_length=1, max_length=5)
 
 
 PROMPT = """Помоги владельцу бизнеса понятнее описать его задачу для команды, которая будет её решать.
-Прочитай исходное описание и уже заполненные поля. Выбери 3–5 самых важных пробелов; не спрашивай повторно о том, что уже ясно.
+Прочитай исходное описание и уже заполненные поля после последнего ответа. Выбери до 5 самых важных пробелов; не спрашивай повторно о том, что уже ясно. В интерфейсе человеку покажут первый вопрос, а после его ответа вызовут тебя снова с обновлённой карточкой. Если пробелов осталось меньше трёх, верни только оставшиеся вопросы.
 
 Пиши вопросы на русском языке так, как спросил бы внимательный собеседник без технического образования:
 - Простые знакомые слова, вежливое обращение на «вы», один вопрос и одна мысль в каждом пункте.
@@ -30,7 +30,7 @@ PROMPT = """Помоги владельцу бизнеса понятнее оп
 
 Примеры подходящего тона: «Кому сейчас мешает эта проблема?», «Есть ли у вас примеры таких случаев?», «Как вы поймёте, что задача решена?»
 
-Верни только JSON вида {"questions": [{"field": "users", "text": "Кому сейчас мешает эта проблема?"}]} с 3–5 вопросами. Для field используй только: context, need, users, dataDescription, dataAccess, constraints, expectedResult, successMetric, successTarget, contact, interactionFormat. Для каждого field задай вопрос, ответ на который заполнит именно это поле."""
+Верни только JSON вида {"questions": [{"field": "users", "text": "Кому сейчас мешает эта проблема?"}]}. Для field используй только: context, need, users, dataDescription, dataAccess, constraints, expectedResult, successMetric, successTarget, contact, interactionFormat. Для каждого field задай вопрос, ответ на который заполнит именно это поле."""
 
 TEMPLATES = [
     ("users", "Какие группы пользователей сталкиваются с этой задачей?"),
@@ -49,11 +49,22 @@ TEMPLATES = [
 
 def fallback(card: dict[str, str]) -> dict:
     missing = [(field, text) for field, text in TEMPLATES if not meaningful(card.get(field, ""), field)]
-    selected = (missing + [entry for entry in TEMPLATES if entry not in missing])[:5]
-    return {"questions": [{"field": field, "text": text} for field, text in selected], "source": "fallback"}
+    questions = []
+    for field, text in missing[:5]:
+        if field == "dataAccess" and meaningful(card.get("dataDescription", ""), "dataDescription"):
+            text = "Вы рассказали о данных. Как команда сможет получить к ним доступ?"
+        elif field == "successTarget" and meaningful(card.get("successMetric", ""), "successMetric"):
+            text = "Вы назвали показатель. Какое значение будет означать успех?"
+        elif field == "expectedResult" and meaningful(card.get("need", ""), "need"):
+            text = "Вы описали нужное изменение. Что именно должна подготовить команда?"
+        questions.append({"field": field, "text": text})
+    return {"questions": questions, "source": "fallback"}
 
 
 def ask_questions(initial_description: str, card: dict[str, str]) -> dict:
+    missing = {field for field, _ in TEMPLATES if not meaningful(card.get(field, ""), field)}
+    if not missing:
+        return {"questions": [], "source": "fallback"}
     key = os.getenv("AI_API_KEY")
     url = os.getenv("AI_API_URL")
     if not key or not url:
@@ -86,6 +97,14 @@ def ask_questions(initial_description: str, card: dict[str, str]) -> dict:
         response.raise_for_status()
         content = response.json()["choices"][0]["message"]["content"]
         parsed = QuestionList.model_validate_json(content)
-        return {"questions": [item.model_dump() for item in parsed.questions], "source": "llm"}
+        questions = []
+        seen = set()
+        for item in parsed.questions:
+            if item.field in missing and item.field not in seen:
+                questions.append(item.model_dump())
+                seen.add(item.field)
+        if questions:
+            return {"questions": questions, "source": "llm"}
+        return fallback(card)
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError, ValidationError):
         return fallback(card)

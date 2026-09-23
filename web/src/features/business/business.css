@@ -14,3 +14,46 @@
 .business-rating ul{margin:0;padding-left:20px}.business-rating li{margin:5px 0}.business-rating>ul{padding:0;list-style:none}.business-rating>ul li{display:flex;justify-content:space-between;gap:12px}
 .business-success{color:#286645;background:#eaf7ef;border:1px solid #bde4ca}
 @media(max-width:700px){.business-fields{grid-template-columns:1fr}.business-heading{align-items:flex-start}}
+
+.business-editor-header{align-items:flex-end}
+.business-editor-header h1{margin:8px 0}
+.business-editor-header .business-button{white-space:nowrap}
+.business-step-heading{display:flex;align-items:flex-start;gap:12px}
+.business-step-heading h2{margin:0 0 4px}
+.business-step-number{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:10px;background:var(--purple-soft);color:var(--purple);font-size:14px;font-weight:800}
+.business-interview-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.85fr);gap:18px;align-items:start}
+.business-question-panel,.business-score-panel{min-height:340px}
+.business-question-panel{background:linear-gradient(150deg,#fff 0%,#fbf9ff 100%)}
+.business-question{display:grid;gap:12px;padding:20px;border:1px solid #e7ddfb;border-radius:15px;background:#fff;box-shadow:0 10px 30px rgba(61,36,110,.06)}
+.business-question h3{font-size:22px;line-height:1.3}
+.business-question-kicker{width:max-content;padding:5px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:12px;font-weight:750;letter-spacing:.03em;text-transform:uppercase}
+.business-question textarea{min-height:110px}
+.business-question .business-button{justify-self:start}
+.business-question-empty{display:grid;justify-items:start;gap:14px;padding:20px;border:1px dashed #cbb8eb;border-radius:15px;background:#fff}
+.business-question-empty h3{font-size:22px}
+.business-question-empty button,.business-card-details button{min-height:40px;padding:9px 16px;border:1px solid var(--purple);border-radius:9px;background:#fff;color:var(--purple);cursor:pointer;font-weight:650}
+.business-question-empty button:disabled,.business-card-details button:disabled{opacity:.5;cursor:not-allowed}
+.business-score-main{display:flex;align-items:baseline;gap:7px;color:var(--purple)}
+.business-score-main strong{font-size:58px;line-height:1;font-weight:800;letter-spacing:-.05em}
+.business-score-main>span:nth-child(2){font-size:20px;font-weight:650}
+.business-level{margin-left:auto;padding:5px 10px;border-radius:999px;background:var(--purple-soft);font-size:13px;font-weight:750}
+.business-score-track{height:10px;overflow:hidden;border-radius:999px;background:#e8e2f0}
+.business-score-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7b58cc,#b777e8);transition:width .35s ease}
+.business-score-breakdown,.business-score-next{padding-top:14px;border-top:1px solid var(--line)}
+.business-score-breakdown h3,.business-score-next h3{margin:0 0 9px;font-size:14px}
+.business-score-breakdown ul,.business-score-next ul{margin:0;padding:0;list-style:none}
+.business-score-breakdown li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px}
+.business-score-breakdown li strong{white-space:nowrap}
+.business-score-next li{position:relative;margin:8px 0;padding-left:17px;color:#5e536c;font-size:13px;line-height:1.4}
+.business-score-next li:before{position:absolute;left:0;content:"•";color:var(--purple)}
+.business-card-details{display:grid;gap:20px}
+.business-card-details summary{cursor:pointer;font-size:17px;font-weight:750}
+.business-card-details summary span{display:block;margin:5px 0 0;color:#746c7d;font-size:13px;font-weight:400}
+.business-card-details .business-fields{margin:20px 0}
+.business-card-details label{display:grid;gap:7px;font-size:14px;font-weight:600}
+.business-card-details input,.business-card-details textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:inherit;font-weight:400;resize:vertical}
+.business-card-details input:focus,.business-card-details textarea:focus{outline:2px solid var(--purple);outline-offset:1px}
+.business-publish-panel{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.business-publish-panel h2{margin-bottom:5px}
+@media(max-width:850px){.business-interview-grid{grid-template-columns:1fr}.business-question-panel,.business-score-panel{min-height:0}}
+@media(max-width:700px){.business-editor-header{align-items:flex-start}.business-question h3{font-size:19px}.business-publish-panel .business-button{width:100%}}

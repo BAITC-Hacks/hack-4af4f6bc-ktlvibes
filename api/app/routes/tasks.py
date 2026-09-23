@@ -42,6 +42,21 @@ def score_preview(task_id: int, body: CardRequest, actor: int = Depends(actor_id
     return score_task(body.card.model_dump())
 
 
+@router.put("/{task_id}/draft")
+def save_draft(task_id: int, body: CardRequest, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
+    task = task_for_owner(session, task_id, actor)
+    if task.status != "draft":
+        raise HTTPException(409, "Опубликованную задачу обновите через подтверждение карточки")
+    card = body.card.model_dump()
+    for key, value in card.items():
+        setattr(task, CARD_COLUMNS.get(key, key), value.strip())
+    task.updated_at = now()
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return {"task": task_json(task), "rating": score_task(card)}
+
+
 @router.put("/{task_id}/confirm")
 def confirm(task_id: int, body: CardRequest, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
     task = task_for_owner(session, task_id, actor)
