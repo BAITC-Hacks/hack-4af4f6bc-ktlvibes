@@ -8,6 +8,10 @@ export interface CreateProposalInput {
   prototypeUrl: string;
 }
 
+export function getTeams() {
+  return request<Team[]>("/api/teams");
+}
+
 export function createProposal(taskId: number, actorId: number, input: CreateProposalInput) {
   return request<Proposal>(`/api/tasks/${taskId}/proposals`, {
     method: "POST",
