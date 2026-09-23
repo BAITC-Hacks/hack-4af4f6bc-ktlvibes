@@ -1,0 +1,8 @@
+.auth-card { width: min(520px, 100%); margin: 48px auto; }
+.auth-card > .muted { line-height: 1.6; }
+.users-form { max-width: 600px; padding-bottom: 0; }
+.users-form select { width: 100%; padding: 10px 12px; border: 1px solid #cfd4de; border-radius: 9px; background: #fff; }
+.users-team-fields { display: grid; gap: 14px; }
+.account-danger { display: grid; gap: 12px; justify-items: start; }
+.account-danger p { margin: 0; }
+.users-delete { color: #9a2f3b; border-color: #f2cdd1; }

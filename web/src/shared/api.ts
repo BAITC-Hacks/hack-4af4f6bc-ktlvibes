@@ -1,7 +1,6 @@
 export interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  actorId?: number;
 }
 
 export class ApiError extends Error {
@@ -45,14 +44,12 @@ export async function request<T>(
 ): Promise<T> {
   const headers = new Headers({ Accept: "application/json" });
   if (options.body !== undefined) headers.set("Content-Type", "application/json");
-  if (options.actorId !== undefined) {
-    headers.set("X-Demo-Actor-Id", String(options.actorId));
-  }
 
   let response: Response;
   try {
     response = await fetch(path, {
       method: options.method ?? "GET",
+      credentials: "same-origin",
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
@@ -61,6 +58,9 @@ export async function request<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && path !== "/api/auth/login" && path !== "/api/auth/me") {
+      window.dispatchEvent(new Event("aisana-auth-expired"));
+    }
     let detail: unknown;
     try {
       const payload: unknown = await response.json();

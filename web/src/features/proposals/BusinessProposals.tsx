@@ -33,7 +33,7 @@ export function BusinessProposals({ actorId, taskId }: BusinessProposalsProps) {
     setProposals([]);
     setProgress([]);
 
-    Promise.all([getTaskProposals(taskId, actorId), getTaskProgress(taskId, actorId)])
+    Promise.all([getTaskProposals(taskId), getTaskProgress(taskId)])
       .then(([savedProposals, savedProgress]) => {
         if (cancelled) return;
         setProposals(savedProposals);
@@ -56,7 +56,7 @@ export function BusinessProposals({ actorId, taskId }: BusinessProposalsProps) {
     setActionError("");
     setSuccess("");
     try {
-      const updated = await updateProposalStatus(proposalId, actorId, status);
+      const updated = await updateProposalStatus(proposalId, status);
       setProposals((current) => current.map((item) => item.id === proposalId ? updated : item));
       setSuccess(status === "selected" ? "Команда выбрана." : "Отклик отклонён.");
     } catch (cause) {
@@ -77,7 +77,7 @@ export function BusinessProposals({ actorId, taskId }: BusinessProposalsProps) {
 
     setPending("progress:" + teamId);
     try {
-      const result = await confirmTaskProgress(taskId, actorId, teamId, note);
+      const result = await confirmTaskProgress(taskId, teamId, note);
       setProgress((current) => [...current, result.confirmation]);
       setTeamPoints((current) => ({ ...current, [teamId]: result.team.points }));
       setSuccess("Прогресс подтверждён, команде начислено " + result.confirmation.points + " баллов.");

@@ -14,6 +14,6 @@ export function getCatalog(filters: CatalogFilters = {}) {
   return request<PublishedTask[]>(query ? `/api/tasks?${query}` : "/api/tasks");
 }
 
-export function getTask(taskId: number, actorId?: number) {
-  return request<Task>(`/api/tasks/${taskId}`, { actorId });
+export function getTask(taskId: number) {
+  return request<Task>(`/api/tasks/${taskId}`);
 }

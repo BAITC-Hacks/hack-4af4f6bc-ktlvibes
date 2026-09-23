@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -9,23 +9,37 @@ def now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class Business(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True, unique=True)
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("role IN ('business', 'team')", name="users_role_check"),
+        UniqueConstraint("role", "name", name="users_role_name_key"),
+    )
 
-
-class Team(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True, unique=True)
+    role: str = Field(index=True)
+    name: str = Field(index=True)
+    email: Optional[str] = Field(default=None, index=True, unique=True)
+    password_hash: Optional[str] = None
     interests: str = ""
     skills: str = ""
     technologies: str = ""
     points: int = 0
 
 
+class UserSession(SQLModel, table=True):
+    token_hash: str = Field(primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    expires_at: int
+
+
+class SeedState(SQLModel, table=True):
+    key: str = Field(primary_key=True)
+
+
 class Task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    business_id: int = Field(foreign_key="business.id", index=True)
+    business_id: int = Field(foreign_key="users.id", index=True)
     status: str = "draft"
     initial_description: str = ""
     topic: str = ""
@@ -50,7 +64,7 @@ class Task(SQLModel, table=True):
 class Proposal(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     task_id: int = Field(foreign_key="task.id", index=True)
-    team_id: int = Field(foreign_key="team.id", index=True)
+    team_id: int = Field(foreign_key="users.id", index=True)
     idea: str
     plan: str
     duration: str
@@ -64,7 +78,7 @@ class ProgressConfirmation(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     task_id: int = Field(foreign_key="task.id", index=True)
-    team_id: int = Field(foreign_key="team.id", index=True)
+    team_id: int = Field(foreign_key="users.id", index=True)
     note: str
     points: int = 10
     confirmed_at: datetime = Field(default_factory=now)

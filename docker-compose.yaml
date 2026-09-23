@@ -23,6 +23,8 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_URL: ${AI_API_URL:-https://api.openai.com/v1/chat/completions}
       AI_MODEL: ${AI_MODEL:-gpt-6-luna}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo12345}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       db:
         condition: service_healthy

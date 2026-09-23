@@ -72,11 +72,6 @@ export interface QuestionsResponse {
   source: QuestionSource;
 }
 
-export interface Business {
-  id: number;
-  name: string;
-}
-
 export interface Team {
   id: number;
   name: string;
@@ -84,6 +79,11 @@ export interface Team {
   skills: string;
   technologies: string;
   points: number;
+}
+
+export interface User extends Team {
+  role: "business" | "team";
+  email: string;
 }
 
 export type ProposalStatus = "submitted" | "selected" | "rejected";
@@ -109,12 +109,3 @@ export interface ProgressConfirmation {
   points: number;
   confirmedAt: string;
 }
-
-export interface DemoActors {
-  businesses: Business[];
-  teams: Team[];
-}
-
-export type DemoActor =
-  | { role: "business"; id: number; name: string }
-  | { role: "team"; id: number; name: string };

@@ -1,28 +1,33 @@
 from sqlmodel import Session, select
 
 from app.db import create_schema, engine
-from app.models import Business, Proposal, Task, Team, now
+from app.models import Proposal, SeedState, Task, User, now
 from app.rating import score_task
 from app.serializers import card_data
+from app.user_migration import assign_seed_credentials
 from demo_data import BUSINESS_NAMES, PROPOSAL, PUBLISHED_TASKS, TEAM_NAMES
 
 
 def seed(session: Session) -> None:
+    if session.get(SeedState, "demo-v1"):
+        return
     for name in BUSINESS_NAMES:
-        if not session.exec(select(Business).where(Business.name == name)).first():
-            session.add(Business(name=name))
+        if not session.exec(select(User).where(User.role == "business", User.name == name)).first():
+            session.add(User(role="business", name=name))
     for name in TEAM_NAMES:
-        if not session.exec(select(Team).where(Team.name == name)).first():
-            session.add(Team(
+        if not session.exec(select(User).where(User.role == "team", User.name == name)).first():
+            session.add(User(
+                role="team",
                 name=name,
                 interests="Городские и социальные задачи",
                 skills="Аналитика, разработка",
                 technologies="Python, React",
             ))
     session.commit()
+    assign_seed_credentials(session)
 
-    businesses = {business.name: business for business in session.exec(select(Business)).all()}
-    teams = {team.name: team for team in session.exec(select(Team)).all()}
+    businesses = {business.name: business for business in session.exec(select(User).where(User.role == "business")).all()}
+    teams = {team.name: team for team in session.exec(select(User).where(User.role == "team")).all()}
     for index, (topic, title, fields) in enumerate(PUBLISHED_TASKS):
         owner = businesses[BUSINESS_NAMES[index]]
         existing = session.exec(select(Task).where(Task.business_id == owner.id, Task.initial_description == title)).first()
@@ -57,6 +62,7 @@ def seed(session: Session) -> None:
         )).first()
         if not existing:
             session.add(Proposal(task_id=task.id, team_id=selected_team.id, **PROPOSAL))
+    session.add(SeedState(key="demo-v1"))
     session.commit()
 
 

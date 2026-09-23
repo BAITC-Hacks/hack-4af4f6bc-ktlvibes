@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ..checks import actor_id, required, task_for_owner
 from ..db import get_session
-from ..models import ProgressConfirmation, Proposal, Team
+from ..models import ProgressConfirmation, Proposal, User
 from ..schemas import ProgressRequest
 from ..serializers import progress_json, team_json
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/tasks")
 def confirm_progress(task_id: int, body: ProgressRequest, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
     task_for_owner(session, task_id, actor)
     note = required(body.note, "Описание прогресса")
-    selected_team = session.exec(select(Team).where(Team.id == body.teamId).with_for_update()).first()
+    selected_team = session.exec(select(User).where(User.id == body.teamId, User.role == "team").with_for_update()).first()
     if selected_team is None:
         raise HTTPException(404, "Команда не найдена")
     if session.exec(select(ProgressConfirmation).where(ProgressConfirmation.task_id == task_id, ProgressConfirmation.team_id == body.teamId)).first():

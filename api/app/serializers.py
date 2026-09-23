@@ -1,6 +1,6 @@
 from datetime import timezone
 
-from .models import ProgressConfirmation, Proposal, Task, Team
+from .models import ProgressConfirmation, Proposal, Task, User
 from .rating import score_task
 from .schemas import Card
 
@@ -42,7 +42,7 @@ def task_json(task: Task) -> dict:
     }
 
 
-def team_json(team: Team) -> dict:
+def team_json(team: User) -> dict:
     return {
         "id": team.id,
         "name": team.name,
@@ -53,7 +53,11 @@ def team_json(team: Team) -> dict:
     }
 
 
-def proposal_json(proposal: Proposal, team: Team) -> dict:
+def user_json(user: User) -> dict:
+    return {"role": user.role, "email": user.email, **team_json(user)}
+
+
+def proposal_json(proposal: Proposal, team: User) -> dict:
     return {
         "id": proposal.id,
         "taskId": proposal.task_id,

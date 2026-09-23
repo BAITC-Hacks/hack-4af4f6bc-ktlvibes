@@ -62,7 +62,7 @@ def confirm(task_id: int, body: CardRequest, actor: int = Depends(actor_id), ses
 
 
 @router.get("")
-def catalog(topic: str | None = None, level: str | None = None, session: Session = Depends(get_session)):
+def catalog(topic: str | None = None, level: str | None = None, _actor: int = Depends(actor_id), session: Session = Depends(get_session)):
     if level and level not in {"черновик", "рабочая", "готовая", "приоритетная"}:
         raise HTTPException(400, "Неизвестный уровень")
     query = select(Task).where(Task.status == "published")
@@ -78,6 +78,8 @@ def get_task(task_id: int, actor: int = Depends(actor_id), session: Session = De
     task = session.get(Task, task_id)
     if task is None:
         raise HTTPException(404, "Задача не найдена")
-    if task.status == "draft" and task.business_id != actor:
-        raise HTTPException(404, "Задача не найдена")
+    if task.status == "draft":
+        business(session, actor)
+        if task.business_id != actor:
+            raise HTTPException(404, "Задача не найдена")
     return task_json(task)

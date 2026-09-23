@@ -38,7 +38,7 @@ export function TeamProposals({ actorId, taskId }: TeamProposalsProps) {
     setLoadError("");
     setProposals([]);
 
-    Promise.all([getMyProposals(taskId, actorId), getTeams()])
+    Promise.all([getMyProposals(taskId), getTeams()])
       .then(([savedProposals, teams]) => {
         if (cancelled) return;
         setProposals(savedProposals);
@@ -87,7 +87,7 @@ export function TeamProposals({ actorId, taskId }: TeamProposalsProps) {
 
     setPending(true);
     try {
-      const saved = await createProposal(taskId, actorId, input);
+      const saved = await createProposal(taskId, input);
       setProposals((current) => [saved, ...current]);
       setForm({ ...emptyForm });
       setSuccess("Предложение отправлено и сохранено.");

@@ -13,7 +13,7 @@ export function BusinessWorkspace({ businessId }: { businessId: number }) {
     let active = true;
     setLoading(true);
     setError("");
-    getMyTasks(businessId).then((items) => {
+    getMyTasks().then((items) => {
       if (active) setTasks(items);
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Не удалось загрузить задачи.");

@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ..checks import actor_id, published_task, required, task_for_owner, team
 from ..db import get_session
-from ..models import ProgressConfirmation, Proposal, Team
+from ..models import ProgressConfirmation, Proposal, User
 from ..schemas import ProposalRequest, StatusRequest
 from ..serializers import proposal_json
 
@@ -39,7 +39,7 @@ def my_proposals(task_id: int, actor: int = Depends(actor_id), session: Session 
 @router.get("/tasks/{task_id}/proposals")
 def proposals(task_id: int, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
     task_for_owner(session, task_id, actor)
-    rows = session.exec(select(Proposal, Team).join(Team).where(Proposal.task_id == task_id).order_by(Proposal.created_at.desc())).all()
+    rows = session.exec(select(Proposal, User).join(User).where(Proposal.task_id == task_id).order_by(Proposal.created_at.desc())).all()
     return [proposal_json(proposal, team) for proposal, team in rows]
 
 
@@ -54,4 +54,4 @@ def set_status(proposal_id: int, body: StatusRequest, actor: int = Depends(actor
     proposal.status = body.status
     session.add(proposal)
     session.commit()
-    return proposal_json(proposal, session.get(Team, proposal.team_id))
+    return proposal_json(proposal, session.get(User, proposal.team_id))

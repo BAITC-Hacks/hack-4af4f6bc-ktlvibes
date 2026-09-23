@@ -44,7 +44,7 @@ export function TaskPage({ actorId, role }: TaskPageProps) {
       return;
     }
 
-    getTask(taskId, actorId)
+    getTask(taskId)
       .then((result) => {
         if (!cancelled) setTask(result);
       })

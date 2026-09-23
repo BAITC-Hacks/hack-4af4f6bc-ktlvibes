@@ -35,7 +35,7 @@ export function TaskEditor({ businessId, taskId, onPublished }: { businessId: nu
     if (!taskId) { setDescription(""); setCard(emptyCard); setStatus("draft"); setLoading(false); return; }
     let active = true;
     setLoading(true);
-    getTask(taskId, businessId).then((task) => {
+    getTask(taskId).then((task) => {
       if (!active) return;
       if (task.businessId !== businessId) throw new Error("Эта задача принадлежит другому бизнесу.");
       setDescription(task.initialDescription); setCard(cardFromTask(task)); setStatus(task.status);
@@ -55,18 +55,18 @@ export function TaskEditor({ businessId, taskId, onPublished }: { businessId: nu
     finally { setBusy(""); }
   };
   const makeDraft = () => run("draft", async () => {
-    const task = await createDraft(description.trim(), card.topic.trim(), businessId);
+    const task = await createDraft(description.trim(), card.topic.trim());
     setId(task.id); setStatus("draft"); setMessage("Черновик создан. Теперь можно получить вопросы и заполнить карточку.");
   });
   const ask = () => id && run("questions", async () => {
-    const result = await getQuestions(id, description, card, businessId);
+    const result = await getQuestions(id, description, card);
     setQuestions(result);
   });
   const preview = () => id && run("preview", async () => {
-    setRating(await scorePreview(id, card, businessId));
+    setRating(await scorePreview(id, card));
   });
   const publish = () => id && run("confirm", async () => {
-    const task = await confirmTask(id, card, businessId);
+    const task = await confirmTask(id, card);
     setStatus("published"); setSavedRating(task.rating); setRating(null);
     onPublished(task.id);
   });

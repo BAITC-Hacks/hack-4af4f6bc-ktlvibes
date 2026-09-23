@@ -1,23 +1,24 @@
-from fastapi import Header, HTTPException
+from fastapi import Depends, HTTPException
 from sqlmodel import Session
 
-from .models import Business, Task, Team
+from .models import Task, User
+from .auth import current_user
 
 
-def actor_id(x_demo_actor_id: int = Header(...)) -> int:
-    return x_demo_actor_id
+def actor_id(user: User = Depends(current_user)) -> int:
+    return user.id
 
 
-def business(session: Session, actor: int) -> Business:
-    result = session.get(Business, actor)
-    if result is None:
+def business(session: Session, actor: int) -> User:
+    result = session.get(User, actor)
+    if result is None or result.role != "business":
         raise HTTPException(404, "Бизнес не найден")
     return result
 
 
-def team(session: Session, actor: int) -> Team:
-    result = session.get(Team, actor)
-    if result is None:
+def team(session: Session, actor: int) -> User:
+    result = session.get(User, actor)
+    if result is None or result.role != "team":
         raise HTTPException(404, "Команда не найдена")
     return result
 

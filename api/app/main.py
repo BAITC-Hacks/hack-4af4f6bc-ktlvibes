@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from sqlmodel import Session
 
 from .db import create_schema, engine
-from .routes import actors, progress, proposals, tasks, teams
+from .routes import actors, auth, progress, proposals, tasks, teams, users
 
 
 @asynccontextmanager
@@ -19,7 +19,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Sana API", lifespan=lifespan)
 app.include_router(actors.router)
+app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(proposals.router)
 app.include_router(progress.router)
 app.include_router(teams.router)
+app.include_router(users.router)

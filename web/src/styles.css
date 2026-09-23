@@ -26,6 +26,8 @@ a:hover { color: var(--purple); }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 750; white-space: nowrap; }
 .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; color: #fff; background: var(--purple); border-radius: 12px; }
 .main-nav { display: flex; align-items: center; gap: 24px; color: var(--ink-soft); font-size: 14px; }
+.session-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; color: var(--ink-soft); font-size: 13px; }
+.session-controls span { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .actor-switcher { display: grid; gap: 5px; margin-left: auto; color: var(--ink-soft); font-size: 11px; }
 .actor-switcher select, .filters input, .filters select {
   min-height: 38px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; color: #292d37; background: #fff;
@@ -90,6 +92,7 @@ a:hover { color: var(--purple); }
 @media (max-width: 760px) {
   .topbar { flex-wrap: wrap; gap: 12px 20px; padding: 14px 20px; }
   .main-nav { order: 3; width: 100%; gap: 18px; }
+  .session-controls { margin-left: auto; }
   .actor-switcher { margin-left: auto; }
   .main-content { width: calc(100% - 32px); margin-top: 24px; }
   .task-fields div { grid-template-columns: 1fr; gap: 6px; }
