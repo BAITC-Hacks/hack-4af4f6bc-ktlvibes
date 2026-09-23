@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aisana}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aisana}
+      POSTGRES_DB: ${POSTGRES_DB:-aisana}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aisana}:${POSTGRES_PASSWORD:-aisana}@db:5432/${POSTGRES_DB:-aisana}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_API_URL: ${AI_API_URL:-}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  # web:
+  #   build: ./web
+  #   depends_on:
+  #     - api
+  #   ports:
+  #     - "5173:5173"
+
+  # e2e:
+  #   profiles: ["test"]
+  #   build: ./e2e
+  #   depends_on:
+  #     - web
+
+volumes:
+  postgres_data:
