@@ -1,3 +1,4 @@
+import json
 import os
 
 import httpx
@@ -18,7 +19,18 @@ class QuestionList(BaseModel):
     questions: list[Question] = Field(min_length=3, max_length=5)
 
 
-PROMPT = "Определи недостающие или неясные сведения в описании бизнес-задачи. Верни только JSON по заданной схеме с 3–5 короткими вопросами на русском, каждый с field из разрешённого списка. Не утверждай факты о компании, клиентах, данных или сроках, которых нет во входе. Если поля заполнены, спроси о конкретике или способе проверки."
+PROMPT = """Помоги владельцу бизнеса понятнее описать его задачу для команды, которая будет её решать.
+Прочитай исходное описание и уже заполненные поля. Выбери 3–5 самых важных пробелов; не спрашивай повторно о том, что уже ясно.
+
+Пиши вопросы на русском языке так, как спросил бы внимательный собеседник без технического образования:
+- Простые знакомые слова, вежливое обращение на «вы», один вопрос и одна мысль в каждом пункте.
+- Вопрос должен быть конкретным, коротким и понятным без пояснений. Проверь, что он естественно звучит по-русски. Не используй жаргон вроде «KPI», «датасет», «валидация», «интеграция» или «метрика».
+- Спрашивай о реальной работе бизнеса: кому это нужно, что происходит сейчас, какой результат нужен, какие примеры есть и как понять, что стало лучше.
+- Учитывай детали из описания, если они есть. Не придумывай факты о компании, клиентах, данных или сроках.
+
+Примеры подходящего тона: «Кому сейчас мешает эта проблема?», «Есть ли у вас примеры таких случаев?», «Как вы поймёте, что задача решена?»
+
+Верни только JSON вида {"questions": [{"field": "users", "text": "Кому сейчас мешает эта проблема?"}]} с 3–5 вопросами. Для field используй только: context, need, users, dataDescription, dataAccess, constraints, expectedResult, successMetric, successTarget, contact, interactionFormat. Для каждого field задай вопрос, ответ на который заполнит именно это поле."""
 
 TEMPLATES = [
     ("users", "Какие группы пользователей сталкиваются с этой задачей?"),
@@ -46,14 +58,29 @@ def ask_questions(initial_description: str, card: dict[str, str]) -> dict:
     url = os.getenv("AI_API_URL")
     if not key or not url:
         return fallback(card)
+    model = os.getenv("AI_MODEL", "gpt-6-luna")
+    payload = {
+        "model": model,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": PROMPT},
+            {"role": "user", "content": json.dumps(
+                {"initialDescription": initial_description, "card": {k: v for k, v in card.items() if v}},
+                ensure_ascii=False,
+            )},
+        ],
+    }
+    if model.startswith("gpt-6-astra"):
+        payload["reasoning_effort"] = "low"
+    elif model.startswith(("gpt-6-sol", "gpt-6-luna")):
+        payload["reasoning_effort"] = "none"
+    else:
+        payload["temperature"] = 0
     try:
         response = httpx.post(
             url,
             headers={"Authorization": f"Bearer {key}"},
-            json={"model": os.getenv("AI_MODEL", "gpt-4o-mini"), "temperature": 0, "response_format": {"type": "json_object"}, "messages": [
-                {"role": "system", "content": PROMPT},
-                {"role": "user", "content": __import__("json").dumps({"initialDescription": initial_description, "card": {k: v for k, v in card.items() if v}}, ensure_ascii=False)},
-            ]},
+            json=payload,
             timeout=8,
         )
         response.raise_for_status()
