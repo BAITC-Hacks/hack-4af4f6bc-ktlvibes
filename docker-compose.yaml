@@ -29,12 +29,14 @@ services:
     ports:
       - "8000:8000"
 
-  # web:
-  #   build: ./web
-  #   depends_on:
-  #     - api
-  #   ports:
-  #     - "5173:5173"
+  web:
+    build: ./web
+    environment:
+      VITE_API_PROXY_TARGET: http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
 
   # e2e:
   #   profiles: ["test"]
