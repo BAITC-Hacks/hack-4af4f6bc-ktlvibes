@@ -19,9 +19,14 @@ def test_publish_preview_catalog_and_ownership(client):
     task_id = draft.json()["id"]
     card = {"title": "Сократить ожидание ответа", "topic": "Поддержка", "context": "Клиенты долго ждут ответа поддержки"}
     assert client.post(f"/api/tasks/{task_id}/score-preview", json={"card": card}).json()["total"] == 10
+    saved = client.put(f"/api/tasks/{task_id}/draft", json={"card": card})
+    assert saved.status_code == 200
+    assert saved.json()["task"]["title"] == card["title"]
+    assert saved.json()["rating"]["total"] == 10
     assert client.get(f"/api/tasks/{task_id}").json()["status"] == "draft"
 
     login(client, "business", 2)
+    assert client.put(f"/api/tasks/{task_id}/draft", json={"card": card}).status_code == 404
     assert client.put(f"/api/tasks/{task_id}/confirm", json={"card": card}).status_code == 404
     assert client.get(f"/api/tasks/{task_id}").status_code == 404
     login(client, "team", 6)
@@ -34,6 +39,7 @@ def test_publish_preview_catalog_and_ownership(client):
     published = client.put(f"/api/tasks/{task_id}/confirm", json={"card": card})
     assert published.status_code == 200
     assert published.json()["score"] == 10
+    assert client.put(f"/api/tasks/{task_id}/draft", json={"card": card}).status_code == 409
     assert any(t["id"] == task_id for t in client.get("/api/tasks", params={"level": "черновик"}).json())
     updated = client.put(f"/api/tasks/{task_id}/confirm", json={"card": {**card, "need": "Нужно сократить время ответа клиентам"}})
     assert updated.json()["score"] == 20
@@ -47,7 +53,7 @@ def test_fallback_proposals_progress_once(client):
     with patch("app.ai.httpx.post", side_effect=__import__("httpx").TimeoutException("timeout")), patch.dict("os.environ", {"AI_API_KEY": "x", "AI_API_URL": "https://example.com"}):
         result = client.post(f"/api/tasks/{task['id']}/questions", json={"initialDescription": "Слабое описание", "card": {}})
     assert result.json()["source"] == "fallback"
-    assert 3 <= len(result.json()["questions"]) <= 5
+    assert len(result.json()["questions"]) == 1
     with patch("app.ai.httpx.post") as ai_post, patch.dict("os.environ", {"AI_API_KEY": "x", "AI_API_URL": "https://example.com"}):
         ai_post.return_value.json.return_value = {"choices": [{"message": {"content": "not JSON"}}]}
         invalid = client.post(f"/api/tasks/{task['id']}/questions", json={"initialDescription": "Слабое описание", "card": {}})

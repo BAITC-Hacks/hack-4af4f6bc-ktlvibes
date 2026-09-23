@@ -17,8 +17,6 @@ def test_latest_models_use_supported_chat_parameters(monkeypatch, model, effort)
     response = Mock()
     response.json.return_value = {"choices": [{"message": {"content": json.dumps({"questions": [
         {"field": "users", "text": "Какие пользователи сталкиваются с проблемой?"},
-        {"field": "dataDescription", "text": "Какие данные доступны для решения задачи?"},
-        {"field": "successMetric", "text": "Как измерить успешность результата?"},
     ]})}}]}
 
     with patch("app.ai.httpx.post", return_value=response) as post:
@@ -30,4 +28,15 @@ def test_latest_models_use_supported_chat_parameters(monkeypatch, model, effort)
     assert "temperature" not in payload
     assert json.loads(payload["messages"][1]["content"])["card"] == {"topic": "Сервис"}
     assert result["source"] == "llm"
-    assert len(result["questions"]) == 3
+    assert len(result["questions"]) == 1
+
+
+def test_fallback_asks_connected_questions(monkeypatch):
+    monkeypatch.delenv("AI_API_KEY", raising=False)
+    monkeypatch.delenv("AI_API_URL", raising=False)
+    card = {}
+    assert ask_questions("Заявки теряются", card)["questions"][0]["field"] == "context"
+    card["context"] = "Заявки приходят на почту и теряются при распределении."
+    assert ask_questions("Заявки теряются", card)["questions"][0]["field"] == "need"
+    card["need"] = "Хотим автоматически распределять заявки между менеджерами."
+    assert ask_questions("Заявки теряются", card)["questions"][0]["field"] == "users"

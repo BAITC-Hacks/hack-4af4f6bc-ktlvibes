@@ -72,6 +72,10 @@ export interface QuestionsResponse {
   source: QuestionSource;
 }
 
+export interface SavedDraftResponse {
+  task: DraftTask;
+  rating: Rating;
+}
 export interface Team {
   id: number;
   name: string;

@@ -17,6 +17,15 @@ WEIGHTS = (
 )
 
 PLACEHOLDERS = {"позже", "не знаю", "нет", "-", "n/a", "tbd", "todo", "test", "тест", "данных нет", "неизвестно"}
+UNINFORMATIVE = re.compile(
+    r"(?:пока\s+)?(?:не\s+зна(?:ю|ем)|неизвестно|позже\s+уточн\w*|"
+    r"уточн\w*\s+позже|потом\s+(?:уточн\w*|расскаж\w*)|"
+    r"нет\s+(?:данных|информации|примеров|материалов)|"
+    r"(?:данных|информации|примеров|материалов)\s+нет|как\s+обычно|всё\s+как\s+всегда|"
+    r"то\s+же\s+самое|без\s+изменений|тест|проверка|заглушка)",
+    re.IGNORECASE,
+)
+FILLER_WORDS = {"это", "всё", "все", "как", "для", "будет", "нужно", "надо", "очень", "просто", "хорошо", "хорошее", "подробно", "подробное", "проверка", "проверки", "описание", "задача", "задачи", "проблема", "решение", "работа", "результат"}
 
 
 def get_level(score: int) -> str:
@@ -37,16 +46,28 @@ def meaningful(value: str, key: str) -> bool:
         return bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value) or re.fullmatch(r"\+?[\d\s()\-]{10,20}", value))
     if key == "constraints" and value.casefold() in {"ограничений нет", "нет ограничений", "без ограничений"}:
         return True
-    if key == "dataDescription" and "данных нет" in value.casefold():
+    if not re.search(r"\w", UNINFORMATIVE.sub("", value.casefold())):
         return False
-    return len(re.sub(r"[^\w]", "", value, flags=re.UNICODE)) >= 12
+    words = re.findall(r"[\w]+", UNINFORMATIVE.sub("", value.casefold()), flags=re.UNICODE)
+    informative = {word for word in words if len(word) >= 3 and word not in FILLER_WORDS}
+    if len(informative) < 2 or len("".join(informative)) < 10:
+        return False
+    if key == "successTarget" and not (re.search(r"\d", value) or re.search(r"\b(?:не\s+более|не\s+менее|отсутств\w*|ни\s+одн\w*)\b", value.casefold())):
+        return False
+    return True
 
 
 def score_task(card: Mapping[str, str]) -> dict:
     breakdown = []
     missing = []
+    credited: list[set[str]] = []
     for key, weight, hint in WEIGHTS:
-        earned = weight if meaningful(card.get(key, ""), key) else 0
+        words = set(re.findall(r"[\w]+", card.get(key, "").casefold(), flags=re.UNICODE))
+        content = {word for word in words if len(word) >= 3 and word not in FILLER_WORDS}
+        repeated = any(content and len(content & earlier) / len(content | earlier) >= 0.8 for earlier in credited)
+        earned = weight if meaningful(card.get(key, ""), key) and not repeated else 0
+        if earned:
+            credited.append(content)
         breakdown.append({"key": key, "earned": earned, "max": weight})
         if not earned:
             missing.append({"key": key, "hint": hint})

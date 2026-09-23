@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..ai import ask_questions
@@ -42,6 +41,21 @@ def score_preview(task_id: int, body: CardRequest, actor: int = Depends(actor_id
     return score_task(body.card.model_dump())
 
 
+@router.put("/{task_id}/draft")
+def save_draft(task_id: int, body: CardRequest, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
+    task = task_for_owner(session, task_id, actor)
+    if task.status != "draft":
+        raise HTTPException(409, "Опубликованную задачу обновите через подтверждение карточки")
+    card = body.card.model_dump()
+    for key, value in card.items():
+        setattr(task, CARD_COLUMNS.get(key, key), value.strip())
+    task.updated_at = now()
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return {"task": task_json(task), "rating": score_task(card)}
+
+
 @router.put("/{task_id}/confirm")
 def confirm(task_id: int, body: CardRequest, actor: int = Depends(actor_id), session: Session = Depends(get_session)):
     task = task_for_owner(session, task_id, actor)
@@ -66,11 +80,15 @@ def catalog(topic: str | None = None, level: str | None = None, _actor: int = De
     if level and level not in {"черновик", "рабочая", "готовая", "приоритетная"}:
         raise HTTPException(400, "Неизвестный уровень")
     query = select(Task).where(Task.status == "published")
-    if topic:
-        query = query.where(func.lower(Task.topic) == topic.casefold())
     query = query.order_by(Task.score.desc(), Task.confirmed_at.desc(), Task.id.desc())
     tasks = session.exec(query).all()
-    return [task_json(task) for task in tasks if level is None or get_level(task.score or 0) == level]
+    normalized_topic = topic.strip().casefold() if topic else None
+    return [
+        task_json(task)
+        for task in tasks
+        if (normalized_topic is None or task.topic.strip().casefold() == normalized_topic)
+        and (level is None or get_level(task.score or 0) == level)
+    ]
 
 
 @router.get("/{task_id}")
