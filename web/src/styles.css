@@ -35,8 +35,10 @@ a:hover { color: var(--purple); }
 .page-heading h1, h1 { margin: 5px 0 8px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -0.04em; }
 .eyebrow { margin: 0; color: var(--purple); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .muted { color: var(--ink-soft); line-height: 1.6; }
-.filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
 .filters label { display: grid; min-width: 210px; gap: 6px; color: var(--ink-soft); font-size: 12px; }
+.filters button { min-height: 38px; padding: 7px 12px; color: var(--purple); background: var(--purple-soft); border: 0; border-radius: 9px; cursor: pointer; }
+.catalog-count { margin: 0; font-size: 13px; }
 .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
 .task-card, .detail-card { padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 5px 20px #22243a08; }
 .task-card h2 { margin: 15px 0 9px; font-size: 20px; }
