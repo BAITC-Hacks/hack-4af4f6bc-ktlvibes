@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { ActorSwitcher } from "./shared/ActorSwitcher";
 import { request } from "./shared/api";
 import type { DemoActor, DemoActors } from "./shared/types";
@@ -16,16 +16,26 @@ function toActors(data: DemoActors): DemoActor[] {
 }
 
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [actors, setActors] = useState<DemoActor[]>([]);
   const [actorKey, setActorKey] = useState(() => localStorage.getItem(ACTOR_STORAGE_KEY) ?? "");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError("");
     request<DemoActors>("/api/demo-actors")
       .then((data) => {
-        if (!cancelled) setActors(toActors(data));
+        if (cancelled) return;
+        const availableActors = toActors(data);
+        setActors(availableActors);
+        if (availableActors.length === 0) {
+          setError("Демо-профили пока не добавлены. Повторите попытку позже.");
+        }
       })
       .catch(() => {
         if (!cancelled) setError("Не удалось загрузить демо-профили. Проверьте, запущен ли backend.");
@@ -36,7 +46,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   const actor = useMemo(
     () => actors.find((item) => `${item.role}:${item.id}` === actorKey) ?? actors[0] ?? null,
@@ -55,6 +65,9 @@ export default function App() {
     const nextKey = `${nextActor.role}:${nextActor.id}`;
     setActorKey(nextKey);
     localStorage.setItem(ACTOR_STORAGE_KEY, nextKey);
+    if (location.pathname.startsWith("/business")) {
+      navigate(nextActor.role === "business" ? "/business" : "/tasks");
+    }
   };
 
   return (
@@ -66,20 +79,29 @@ export default function App() {
         </Link>
         <nav className="main-nav" aria-label="Главная навигация">
           <Link to="/tasks">Каталог</Link>
-          <Link to="/business">Кабинет бизнеса</Link>
+          {actor?.role === "business" && <Link to="/business">Кабинет бизнеса</Link>}
         </nav>
         <ActorSwitcher actors={actors} value={actor} onChange={chooseActor} disabled={loading} />
       </header>
 
       <main className="main-content">
-        {error && <p className="notice notice-error" role="alert">{error}</p>}
+        {error && (
+          <div className="notice notice-error" role="alert">
+            <p>{error}</p>
+            <button type="button" onClick={() => setReloadKey((key) => key + 1)}>
+              Повторить загрузку
+            </button>
+          </div>
+        )}
         {!actor && loading && <p role="status">Подключаем демо-профили…</p>}
         {actor && (
           <Routes>
             <Route path="/" element={<Navigate to="/tasks" replace />} />
             <Route path="/tasks" element={<CatalogPage actorId={actor.id} />} />
             <Route path="/tasks/:taskId" element={<TaskPage actorId={actor.id} role={actor.role} />} />
-            <Route path="/business/*" element={<BusinessPlaceholder role={actor.role} />} />
+            <Route path="/business" element={actor.role === "business" ? <BusinessPlaceholder title="Задачи бизнеса" /> : <Navigate to="/tasks" replace />} />
+            <Route path="/business/tasks/new" element={actor.role === "business" ? <BusinessPlaceholder title="Новая задача" /> : <Navigate to="/tasks" replace />} />
+            <Route path="/business/tasks/:taskId/edit" element={actor.role === "business" ? <BusinessPlaceholder title="Редактирование задачи" /> : <Navigate to="/tasks" replace />} />
             <Route path="*" element={<Navigate to="/tasks" replace />} />
           </Routes>
         )}
@@ -88,12 +110,15 @@ export default function App() {
   );
 }
 
-function BusinessPlaceholder({ role }: { role: DemoActor["role"] }) {
+function BusinessPlaceholder({ title }: { title: string }) {
   return (
     <section className="empty-state">
       <p className="eyebrow">Кабинет бизнеса</p>
-      <h1>Раздел конструктора подключит фронт 1</h1>
-      <p>Сейчас выбран профиль: {role === "business" ? "бизнес" : "команда"}.</p>
+      <h1>{title}</h1>
+      <p>Этот раздел скоро будет доступен.</p>
+      {title === "Задачи бизнеса" && (
+        <p><Link className="text-link" to="/business/tasks/new">Создать задачу →</Link></p>
+      )}
       <Link className="text-link" to="/tasks">Открыть каталог задач →</Link>
     </section>
   );

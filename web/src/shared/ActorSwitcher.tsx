@@ -24,7 +24,7 @@ export function ActorSwitcher({ actors, value, onChange, disabled }: ActorSwitch
           if (actor) onChange(actor);
         }}
       >
-        {!value && <option value="">Загрузка профилей…</option>}
+        {!value && <option value="">{disabled ? "Загрузка профилей…" : "Нет профилей"}</option>}
         {actors.map((actor) => (
           <option key={actorKey(actor)} value={actorKey(actor)}>
             {actor.role === "business" ? "Бизнес" : "Команда"}: {actor.name}
