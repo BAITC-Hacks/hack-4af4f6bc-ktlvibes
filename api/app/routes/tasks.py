@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..ai import ask_questions
@@ -81,11 +80,15 @@ def catalog(topic: str | None = None, level: str | None = None, session: Session
     if level and level not in {"черновик", "рабочая", "готовая", "приоритетная"}:
         raise HTTPException(400, "Неизвестный уровень")
     query = select(Task).where(Task.status == "published")
-    if topic:
-        query = query.where(func.lower(Task.topic) == topic.casefold())
     query = query.order_by(Task.score.desc(), Task.confirmed_at.desc(), Task.id.desc())
     tasks = session.exec(query).all()
-    return [task_json(task) for task in tasks if level is None or get_level(task.score or 0) == level]
+    normalized_topic = topic.strip().casefold() if topic else None
+    return [
+        task_json(task)
+        for task in tasks
+        if (normalized_topic is None or task.topic.strip().casefold() == normalized_topic)
+        and (level is None or get_level(task.score or 0) == level)
+    ]
 
 
 @router.get("/{task_id}")
