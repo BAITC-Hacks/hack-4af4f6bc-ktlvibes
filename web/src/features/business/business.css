@@ -28,6 +28,8 @@
 .business-question h3{font-size:22px;line-height:1.3}
 .business-question-kicker{width:max-content;padding:5px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:12px;font-weight:750;letter-spacing:.03em;text-transform:uppercase}
 .business-question textarea{min-height:110px}
+.business-answer-example{display:grid;gap:4px;padding:11px 13px;border-left:3px solid #a98bdc;border-radius:0 9px 9px 0;background:#f7f3ff;color:#5e536c;font-size:13px;line-height:1.45}
+.business-answer-example strong{color:var(--purple);font-size:12px}
 .business-question .business-button{justify-self:start}
 .business-question-empty{display:grid;justify-items:start;gap:14px;padding:20px;border:1px dashed #cbb8eb;border-radius:15px;background:#fff}
 .business-question-empty h3{font-size:22px}

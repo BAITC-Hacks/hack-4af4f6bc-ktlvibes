@@ -16,6 +16,19 @@ const fields: { key: keyof CardFields; label: string }[] = [
 
 const emptyCard = Object.fromEntries(fields.map(({ key }) => [key, ""])) as unknown as CardFields;
 const labelFor = (key: string) => fields.find((field) => field.key === key)?.label ?? key;
+const answerExamples: Partial<Record<keyof CardFields, string>> = {
+  context: "Сейчас заявки приходят на почту, и сотрудники вручную распределяют их между собой.",
+  need: "Хотим быстрее распределять заявки и не терять обращения клиентов.",
+  users: "Менеджеры поддержки, которые ежедневно разбирают обращения клиентов.",
+  dataDescription: "Есть обезличенные примеры 50 заявок и таблица с их категориями.",
+  dataAccess: "Передадим команде обезличенную таблицу по ссылке после первой встречи.",
+  expectedResult: "Работающий прототип, который предлагает категорию для новой заявки.",
+  successMetric: "Сравним время распределения заявок до и после использования прототипа.",
+  successTarget: "Среднее время распределения одной заявки сократится с 10 до 5 минут.",
+  constraints: "Прототип нужен за две недели; реальные имена клиентов использовать нельзя.",
+  contact: "project@example.com",
+  interactionFormat: "Созвон раз в неделю и комментарии к прототипу в течение двух дней.",
+};
 const cardFromTask = (task: Task): CardFields => Object.fromEntries(fields.map(({ key }) => [key, task[key]])) as unknown as CardFields;
 
 interface TaskEditorProps {
@@ -187,6 +200,7 @@ export function TaskEditor({ businessId, taskId, onPublished, onSavedExit }: Tas
               <p className="muted">Этот ответ дополнит поле «{labelFor(question.field)}».</p>
               <label htmlFor="business-answer">Ваш ответ</label>
               <textarea id="business-answer" rows={4} value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder="Расскажите своими словами…" required />
+              {answerExamples[question.field] && <p className="business-answer-example"><strong>Пример ответа</strong><span>{answerExamples[question.field]}</span></p>}
               <button className="business-button" type="submit" disabled={Boolean(busy) || !answer.trim()}>{busy === "answer" ? "Сохраняем и подбираем вопрос…" : "Ответить и продолжить →"}</button>
             </form>}
             {interviewStarted && !question && <div className="business-question-empty">
